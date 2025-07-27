@@ -1,0 +1,57 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Publish Binaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g., v1.0.0)"
+        required: true
+        type: string
+      prerelease:
+        description: "Prerelease"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.23"
+
+      - name: Build aish-linux-amd64
+        run: GOARCH=amd64 GOOS=linux make
+
+      - name: Build aish-darwin-amd64
+        run: GOARCH=amd64 GOOS=darwin make
+
+      - name: Build aish-linux-arm64
+        run: GOARCH=arm64 GOOS=linux make
+
+      - name: Build aish-darwin-arm64
+        run: GOARCH=arm64 GOOS=darwin make
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: AISH ${{ github.event.inputs.version }}
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease }}
+          files: |
+            build/aish-linux-amd64
+            build/aish-darwin-amd64
+            build/aish-linux-arm64
+            build/aish-darwin-arm64
