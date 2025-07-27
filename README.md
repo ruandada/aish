@@ -286,6 +286,26 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **AI Integration**: Powered by OpenAI's GPT models
 - **Inspiration**: Modern shell experiences and AI-assisted development tools
 
+## ☕️ Buy Me a Coffee
+
+If you find AISH helpful and would like to support its development, consider buying me a coffee! Your support helps keep this project alive and enables me to continue improving it.
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="docs/donate-alipay.png" alt="Alipay QR Code" width="200">
+        <p><strong>Alipay</strong></p>
+      </td>
+      <td align="center" style="padding-left: 20px;">
+        <img src="docs/donate-wechat.png" alt="WeChat QR Code" width="200">
+        <p><strong>WeChat</strong></p>
+      </td>
+    </tr>
+  </table>
+  <p><strong>Scan to donate</strong></p>
+</div>
+
 ---
 
 <div align="center">
