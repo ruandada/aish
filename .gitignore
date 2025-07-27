@@ -1,0 +1,11 @@
+# macos
+.DS_Store
+
+# build
+build/
+
+# env
+.env
+
+./.aishrc
+./.aish/

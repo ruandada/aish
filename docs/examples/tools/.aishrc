@@ -1,0 +1,5 @@
+# You can add tools to the AI system with usage prompt
+
+aitool -u "story <thing>" ./story.sh
+
+aitool -u "draw [-h] [--title TITLE] {line,bar,pie,scatter,heatmap,all}" ./draw.py
