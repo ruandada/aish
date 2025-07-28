@@ -39,6 +39,7 @@ type Shell struct {
 	runner  *interp.Runner
 	environ []string
 	params  []string
+	exit    bool
 }
 
 type ShellOption func(*Shell)
@@ -358,6 +359,10 @@ func (s *Shell) readlines(
 		}
 		ce.terminated = true
 		s.state.SetCurrentExecution(nil)
+
+		if s.exit {
+			break
+		}
 	}
 	return nil
 }
@@ -388,13 +393,7 @@ func (s *Shell) evalAST(ce *CommandExecution, ast *syntax.File, modifierFunc fun
 	}
 	err = s.runner.Run(runnerCtx, ast)
 	if s.runner.Exited() {
-		exitCode := uint8(0)
-		if err != nil {
-			if exitStatus, ok := err.(interp.ExitStatus); ok {
-				exitCode = uint8(exitStatus)
-			}
-		}
-		os.Exit(int(exitCode))
+		s.exit = true
 		return err
 	}
 

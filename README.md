@@ -104,7 +104,7 @@ tell me a joke
 # > Because light attracts bugs!
 
 # Use quotes for explicit AI mode (useful when command conflicts with built-ins)
-"what day is it today"
+"what day is today"
 # > Today is Sunday, July 27, 2025.
 
 # Or use the "ai:" prefix for explicit AI commands

@@ -7,11 +7,12 @@ import (
 type ConfigName string
 
 const (
-	ConfigOpenAIAPIKey  ConfigName = "openai.api_key"
-	ConfigOpenAIModel   ConfigName = "openai.model"
-	ConfigOpenAIBaseURL ConfigName = "openai.base_url"
-	ConfigMaxIterations ConfigName = "max_iter"
-	ConfigMaxHistory    ConfigName = "max_history"
+	ConfigOpenAIAPIKey     ConfigName = "openai.api_key"
+	ConfigOpenAIModel      ConfigName = "openai.model"
+	ConfigOpenAIBaseURL    ConfigName = "openai.base_url"
+	ConfigMaxIterations    ConfigName = "max_iter"
+	ConfigMaxHistory       ConfigName = "max_history"
+	ConfigMaxMessageLength ConfigName = "max_message_length"
 )
 
 var ConfigKeys = []ConfigName{
@@ -23,10 +24,11 @@ var ConfigKeys = []ConfigName{
 }
 
 var defaultConfigValues = map[ConfigName]string{
-	ConfigOpenAIModel:   "gpt-4o-mini",
-	ConfigOpenAIBaseURL: "https://api.openai.com/v1",
-	ConfigMaxIterations: "6",
-	ConfigMaxHistory:    "10",
+	ConfigOpenAIModel:      "gpt-4o-mini",
+	ConfigOpenAIBaseURL:    "https://api.openai.com/v1",
+	ConfigMaxIterations:    "6",
+	ConfigMaxHistory:       "10",
+	ConfigMaxMessageLength: "1000",
 }
 
 var configValues = map[ConfigName]string{}
