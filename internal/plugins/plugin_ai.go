@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"net/http"
 	"strings"
 	"unicode"
 
@@ -156,6 +157,16 @@ func (a *AIPlugin) Execute(ce *base.CommandExecution, sce *base.SubCommandExecut
 		}
 
 		if err := stream.Err(); err != nil {
+			if openaiErr, ok := err.(*openai.Error); ok {
+				if openaiErr.StatusCode == http.StatusUnauthorized {
+					if apiKey := base.GetConfig(base.ConfigOpenAIAPIKey); apiKey == "" {
+						fmt.Fprintln(sce.Stderr(), "Error: You haven't set the OpenAI API key, configure it by: aiset openai.api_key \"<your-api-key>\"")
+					} else {
+						fmt.Fprintln(sce.Stderr(), "Error: invalid OpenAI API key, review your configuration by: aiget")
+					}
+					return true, nil
+				}
+			}
 			return true, err
 		}
 
@@ -240,7 +251,7 @@ func (a *AIPlugin) AfterExecute(ce *base.CommandExecution, sce *base.SubCommandE
 		if exitStatus, ok := err.(interp.ExitStatus); ok {
 			fmt.Fprintln(sce.Stdai(), a.formatExitStatus(exitStatus))
 		} else {
-			shell.PrintError(sce.Stdai(), err)
+			shell.PrintError(sce.Stderr(), err)
 		}
 	}
 
