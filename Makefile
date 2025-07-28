@@ -10,7 +10,7 @@ BINARY_NAME := "$(BINARY_NAME).exe"
 endif
 
 build/$(BINARY_NAME): $(SOURCE_CODE)
-	@CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o ./build/$(BINARY_NAME) ./cmd/aish/main.go
+	@GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o ./build/$(BINARY_NAME) ./cmd/aish/main.go
 
 .PHONY: install
 
