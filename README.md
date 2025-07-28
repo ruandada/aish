@@ -42,17 +42,15 @@ AISH is an intelligent shell that seamlessly combines traditional UNIX shell fun
 - **OpenAI API key**
 - **Go** 1.23.0 or later (if build from source)
 
-### Option 1: Build and Install from Source
+### Option 1: Build and Install from Source (Recommended)
 
 ```bash
-git clone https://github.com/ruandada/aish.git
-cd aish
-make install
+go install github.com/ruandada/aish/cmd/aish@latest
 ```
 
 ### Option 2: Donwload prebuild binaries
 
-See [Releases](https://github.com/ruandada/aish/releases)
+See [releases](https://github.com/ruandada/aish/releases)
 
 ## ⚙️ Configuration
 
