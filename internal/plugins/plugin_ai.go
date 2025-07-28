@@ -38,9 +38,7 @@ func init() {
 
 type AIPlugin struct {
 	client            *openai.Client
-	historyLimit      int
 	historyExecutions []*base.AIExecution
-	iterationLimit    int
 }
 
 var _ base.ShellPlugin = (*AIPlugin)(nil)
@@ -59,7 +57,6 @@ func (a *AIPlugin) Install(shell *base.Shell) error {
 	c := openai.NewClient()
 	a.client = &c
 
-	a.syncLimits()
 	return nil
 }
 
@@ -99,9 +96,10 @@ func (a *AIPlugin) Execute(ce *base.CommandExecution, sce *base.SubCommandExecut
 
 	qa := sce.QA()
 	iter := 0
+	iterLimit := a.iterationLimit()
 
 	for {
-		if iter > a.iterationLimit {
+		if iter > iterLimit {
 			iter--
 			break
 		}
@@ -172,7 +170,7 @@ func (a *AIPlugin) Execute(ce *base.CommandExecution, sce *base.SubCommandExecut
 				hasToolCall = true
 
 				// Flush the leading answer text if it exists, and ensure the buffer is clean before handling the tool call
-				if answerText := ce.AnswerText(); answerText != "" {
+				if answerText := a.truncateMessageText(ce.AnswerText()); answerText != "" {
 					qa.Answers = append(qa.Answers, base.AIAssistantAnswer{
 						Text:     answerText,
 						ToolCall: nil,
@@ -184,7 +182,7 @@ func (a *AIPlugin) Execute(ce *base.CommandExecution, sce *base.SubCommandExecut
 				err = a.handleToolCall(ce, sce, toolCall, shell)
 
 				if err != nil {
-					if answerText := ce.AnswerText(); answerText != "" {
+					if answerText := a.truncateMessageText(ce.AnswerText()); answerText != "" {
 						qa.Answers = append(qa.Answers, base.AIAssistantAnswer{
 							Text:     answerText,
 							ToolCall: toolCall,
@@ -215,6 +213,7 @@ func (a *AIPlugin) AfterExecute(ce *base.CommandExecution, sce *base.SubCommandE
 	}
 
 	qa := sce.QA()
+	// skip built-in commands
 	if qa.IsRoot() {
 		switch sce.Cmd() {
 		case string(ExtensionCommandUserMode):
@@ -248,7 +247,7 @@ func (a *AIPlugin) AfterExecute(ce *base.CommandExecution, sce *base.SubCommandE
 	toolCall := qa.UnderToolCall
 	trace := qa.Trace()
 
-	if answerText := ce.AnswerText(); answerText != "" {
+	if answerText := a.truncateMessageText(ce.AnswerText()); answerText != "" {
 		for _, qa := range trace {
 			qa.Answers = append(qa.Answers, base.AIAssistantAnswer{
 				Text:     answerText,
@@ -266,13 +265,11 @@ func (a *AIPlugin) AfterExecute(ce *base.CommandExecution, sce *base.SubCommandE
 
 // End implements base.ShellPlugin.
 func (a *AIPlugin) End(ce *base.CommandExecution, shell *base.Shell) error {
-	a.syncLimits()
-
 	if len(ce.QA()) == 0 {
 		return nil
 	}
 
-	limit := a.historyLimit
+	limit := a.historyLimit()
 	if limit == 0 {
 		a.historyExecutions = nil
 		return nil
@@ -322,7 +319,7 @@ func (a *AIPlugin) evalToolCall(
 	}
 
 	if isBuiltin {
-		if answerText := ce.AnswerText(); answerText != "" {
+		if answerText := a.truncateMessageText(ce.AnswerText()); answerText != "" {
 			qa.Answers = append(qa.Answers, base.AIAssistantAnswer{
 				Text:     answerText,
 				ToolCall: toolCall,
@@ -395,7 +392,8 @@ func (a *AIPlugin) formatExitStatus(err interp.ExitStatus) string {
 }
 
 func (a *AIPlugin) retrieveMessages(ce *base.CommandExecution, shell *base.Shell, extra *base.AIExecution) ([]openai.ChatCompletionMessageParamUnion, error) {
-	messages := make([]openai.ChatCompletionMessageParamUnion, 0, len(a.historyExecutions)*(1+a.iterationLimit)+1)
+	iterLimit := a.iterationLimit()
+	messages := make([]openai.ChatCompletionMessageParamUnion, 0, len(a.historyExecutions)*(1+iterLimit)+1)
 
 	if systemPrompt, err := a.generateSystemPrompt(shell); err != nil {
 		return nil, err
@@ -542,11 +540,34 @@ func (a *AIPlugin) generateSystemPrompt(shell *base.Shell) (string, error) {
 	return sb.String(), nil
 }
 
-func (a *AIPlugin) syncLimits() {
+func (a *AIPlugin) historyLimit() int {
 	if limit, ok := base.GetIntConfig(base.ConfigMaxHistory); ok {
-		a.historyLimit = max(limit, 0)
+		return max(limit, 0)
 	}
+	return 0
+}
+
+func (a *AIPlugin) iterationLimit() int {
 	if limit, ok := base.GetIntConfig(base.ConfigMaxIterations); ok {
-		a.iterationLimit = max(limit, 1)
+		return max(limit, 1)
 	}
+	return 1
+}
+
+func (a *AIPlugin) maxMessageLength() int {
+	if limit, ok := base.GetIntConfig(base.ConfigMaxMessageLength); ok {
+		return max(limit, 0)
+	}
+	return 0
+}
+
+func (a *AIPlugin) truncateMessageText(text string) string {
+	limit := a.maxMessageLength()
+	if limit == 0 {
+		return ""
+	}
+	if n := len(text); n > limit {
+		return text[(n - limit):]
+	}
+	return text
 }
